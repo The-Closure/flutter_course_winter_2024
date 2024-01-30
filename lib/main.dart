@@ -1,14 +1,12 @@
-import 'dart:async';
+import 'dart:ffi';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_ui/view/pages/layeout_pageview.dart';
-import 'package:flutter_ui/view/pages/slider_page.dart';
+import 'package:flutter_ui/comment_model.dart';
 
 void main() {
   runApp(MyApp());
 }
-
-PageController controller = PageController();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,54 +14,74 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false, home: GridViewExample());
+      debugShowCheckedModeBanner: false,
+      home: HomePage(),
+    );
   }
 }
 
-class GridViewExample extends StatelessWidget {
-  const GridViewExample({super.key});
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          SizedBox(
-            height: 700,
-            child: GridView(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                // crossAxisSpacing: 20,
-                mainAxisExtent: 300,
-                // mainAxisSpacing: 20
+        body: FutureBuilder(
+      future: getData(),
+      builder: (context, response) {
+        if (response.hasData) {
+          dynamic temp = response.data;
+          // List<CommentModel> comments = [];
+          // for (var element in temp) {
+          //   CommentModel comment = CommentModel(
+          //       postId: element['postId'],
+          //       id: element['id'],
+          //       name: element['name'],
+          //       email: element['email'],
+          //       body: element['body']);
+          //   comments.add(comment);
+          // }
+          List<CommentModel> comments = List.generate(
+              temp.length,
+              (index) => CommentModel(
+                  postId: temp[index]['postId'],
+                  id: temp[index]['id'],
+                  name: temp[index]['name'],
+                  email: temp[index]['email'],
+                  body: temp[index]['body']));
+          return Center(
+              child: ListView.builder(
+            itemCount: comments.length,
+            itemBuilder: (context, index) => Card(
+              child: ListTile(
+                trailing: Image.network(
+                  "https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png",
+
+                  // errorBuilder: (context, error, stackTrace) {
+                  //   return FlutterLogo();
+                  // },
+                ),
+                title: Text(comments[index].name),
+                subtitle: Text(comments[index].email),
+                leading: CircleAvatar(
+                  child: Text(comments[index].id.toString()),
+                ),
               ),
-              children: [
-                FlutterLogo(
-                  size: 100,
-                ),
-                FlutterLogo(
-                  size: 100,
-                ),
-                FlutterLogo(
-                  size: 100,
-                ),
-                FlutterLogo(
-                  size: 100,
-                ),
-                FlutterLogo(
-                  size: 100,
-                ),
-                FlutterLogo(
-                  size: 100,
-                ),
-                FlutterLogo(
-                  size: 100,
-                )
-              ],
             ),
-          ),
-        ],
-      ),
-    );
+          ));
+        } else {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+    ));
   }
+}
+
+getData() async {
+  Dio dio = Dio();
+  Response response =
+      await dio.get("https://jsonplaceholder.typicode.com/comments");
+  return response.data;
 }

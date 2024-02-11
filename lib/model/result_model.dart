@@ -1,1 +1,1 @@
-abstract class ResultModel {}
+class ResultModel {}

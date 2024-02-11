@@ -1,25 +1,14 @@
+import 'dart:math';
+
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:service_layer_clean/app_string.dart';
-import 'package:service_layer_clean/config/config.dart';
-import 'package:service_layer_clean/model/error_mode.dart';
+import 'package:service_layer_clean/model/animal_model.dart';
 import 'package:service_layer_clean/model/result_model.dart';
-import 'package:service_layer_clean/model/user_model.dart';
-import 'package:service_layer_clean/model/user_model_two_model.dart';
-import 'package:service_layer_clean/service/user_service.dart';
+import 'package:service_layer_clean/service/animal_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await EasyLocalization.ensureInitialized();
-  setup();
-  runApp(
-    EasyLocalization(
-        supportedLocales: [Locale('ar'), Locale('en')],
-        path:
-            'assets/translate', // <-- change the path of the translation files
-        fallbackLocale: Locale('en'),
-        child: MyApp()),
-  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -28,113 +17,113 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      home: HomePage()
-    );
+        theme: ThemeData(colorSchemeSeed: Colors.purple[300]),
+        home: SericeLayerUi());
   }
 }
 
-class ServiceUIExample extends StatelessWidget {
-  const ServiceUIExample({
-    super.key,
-  });
+class SericeLayerUi extends StatelessWidget {
+  SericeLayerUi({super.key});
+
+  TextEditingController name = TextEditingController();
+
+  TextEditingController color = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder(
-        future: UserServiceImpelment().getOneUser(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            ResultModel temp = snapshot.data as ResultModel;
-            if (temp is UserModel) {
-              return ListView.builder(
-                itemCount: 1,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      child: Text((index + 1).toString()),
-                    ),
-                    title: Text(temp.name),
-                    subtitle: Text(temp.email),
-                  );
+      appBar: AppBar(
+        title: Text("Post Data"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width / 2,
+                child: TextField(
+                  controller: name,
+                  decoration: InputDecoration(
+                      hintText: 'Enter Your Data ',
+                      border: OutlineInputBorder()),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width / 2,
+                child: TextField(
+                  controller: color,
+                  decoration: InputDecoration(
+                      hintText: 'Enter Your Data ',
+                      border: OutlineInputBorder()),
+                ),
+              ),
+            ),
+            ElevatedButton(
+                onPressed: () async {
+                  bool status = await AnimalServiceImp().createAnimal(
+                      AnimalModel(name: name.text, color: color.text));
+                  if (status) {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AnimalUIScreen(),
+                        ));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
+                      content: Text("No intrenter"),
+                      backgroundColor: Colors.red,
+                    ));
+                  }
                 },
-              );
-            } else {
-              temp as ErrorModel;
-              return Center(child: Text(temp.message));
-            }
-          } else {
-            return Center(
-              child: LinearProgressIndicator(),
-            );
-          }
+                child: Text("send Data"))
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AnimalUIScreen extends StatelessWidget {
+  AnimalUIScreen({super.key});
+
+  ValueNotifier<List<AnimalModel>> animal =
+      ValueNotifier([AnimalModel(name: "", color: "")]);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: ElevatedButton(
+            onPressed: () async {
+              List<ResultModel> status = await AnimalServiceImp().getAnimals();
+              if (status is List<AnimalModel>) {
+                animal.value = status;
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
+                  content: Text("No intrenter"),
+                  backgroundColor: Colors.red,
+                ));
+              }
+            },
+            child: Text("get Data")),
+      ),
+      body: ValueListenableBuilder(
+        valueListenable: animal,
+        builder: (context, value, child) {
+          return ListView.builder(
+            itemCount: value.length,
+            itemBuilder: (context, index) => ListTile(
+              title: Text(value[index].name),
+              subtitle: Text(value[index].color),
+            ),
+          );
         },
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Hello1").tr(),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(core.get<DateTime>().minute.toString()),
-            Text(AppString.HELLOWOLRD).tr(),
-            ElevatedButton(onPressed: () {
-              Navigator.push(context,MaterialPageRoute(builder: (context) {
-                return HomePage2();
-              },));
-              if(context.locale.languageCode == 'ar'){
-                context.setLocale(Locale('en'));
-              }else {
-                   context.setLocale(Locale('ar'));
-              }
-            }, child: Text("translate").tr())
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-
-class HomePage2 extends StatelessWidget {
-  const HomePage2({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Hello1").tr(),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(core.get<DateTime>().minute.toString()),
-            Text(AppString.HELLOWOLRD).tr(),
-            ElevatedButton(onPressed: () {
-              if(context.locale.languageCode == 'ar'){
-                context.setLocale(Locale('en'));
-              }else {
-                   context.setLocale(Locale('ar'));
-              }
-            }, child: Text("translate").tr())
-          ],
-        ),
       ),
     );
   }

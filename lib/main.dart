@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:service_layer_clean/model/animal_model.dart';
+import 'package:service_layer_clean/model/list_animal_model.dart';
 import 'package:service_layer_clean/model/result_model.dart';
 import 'package:service_layer_clean/service/animal_service.dart';
 
@@ -92,8 +93,8 @@ class SericeLayerUi extends StatelessWidget {
 class AnimalUIScreen extends StatelessWidget {
   AnimalUIScreen({super.key});
 
-  ValueNotifier<List<AnimalModel>> animal =
-      ValueNotifier([AnimalModel(name: "", color: "")]);
+  ValueNotifier<ListAnimalModel> animal =
+      ValueNotifier(ListAnimalModel(animals: [AnimalModel(name: '', color: '')]));
 
   @override
   Widget build(BuildContext context) {
@@ -101,8 +102,8 @@ class AnimalUIScreen extends StatelessWidget {
       appBar: AppBar(
         title: ElevatedButton(
             onPressed: () async {
-              List<ResultModel> status = await AnimalServiceImp().getAnimals();
-              if (status is List<AnimalModel>) {
+              ResultModel status = await AnimalServiceImp().getAnimals();
+              if (status is ListAnimalModel) {
                 animal.value = status;
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
@@ -117,10 +118,10 @@ class AnimalUIScreen extends StatelessWidget {
         valueListenable: animal,
         builder: (context, value, child) {
           return ListView.builder(
-            itemCount: value.length,
+            itemCount: value.animals.length,
             itemBuilder: (context, index) => ListTile(
-              title: Text(value[index].name),
-              subtitle: Text(value[index].color),
+              title: Text(value.animals[index].name),
+              subtitle: Text(value.animals[index].color),
             ),
           );
         },

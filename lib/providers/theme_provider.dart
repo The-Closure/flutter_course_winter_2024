@@ -4,23 +4,27 @@ import 'package:shared_provider_theme/config/di.dart';
 import 'package:shared_provider_theme/utils/theme_manager.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeData themeData = ThemeMangaer.lightMode;
-  late bool isDarkMode;
+  late ThemeData themeData;
+  late bool? isDarkMode;
 
   void changeTheme() {
-    if (isDarkMode == true) {
+    if (isDarkMode!) {
       themeData = ThemeMangaer.lightMode;
     } else {
       themeData = ThemeMangaer.darkMode;
     }
-    isDarkMode = !isDarkMode;
-    getIt.get<SharedPreferences>().setBool('theme', isDarkMode);
+    isDarkMode = !isDarkMode!;
+    getIt.get<SharedPreferences>().setBool('theme', isDarkMode!);
     notifyListeners();
   }
 
   void initTheme() {
     print('InitState');
     isDarkMode = getIt.get<SharedPreferences>().getBool('theme') ?? false;
-    changeTheme();
+    if (isDarkMode!) {
+      themeData = ThemeMangaer.darkMode;
+    } else {
+      themeData = ThemeMangaer.lightMode;
+    }
   }
 }

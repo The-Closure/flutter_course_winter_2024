@@ -15,7 +15,7 @@ class CounterPage extends StatelessWidget {
         title: const Text("Counter Demo With Provider"),
         actions: [
           Switch(
-            value: context.watch<ThemeProvider>().isDarkMode,
+            value: context.watch<ThemeProvider>().isDarkMode!,
             onChanged: (value) {
               context.read<ThemeProvider>().changeTheme();
             },
